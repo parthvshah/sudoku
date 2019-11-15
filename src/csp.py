@@ -101,7 +101,7 @@ class readTestcase():
                 print(line)
         print()
 
-if __name__ == '__main__':
-    testcase = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
+def main(testcase):
+    # testcase = '4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......'
     solve_1 = readTestcase(testcase)
-    solve_1.display()
+    # solve_1.display()

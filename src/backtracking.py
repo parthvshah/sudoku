@@ -98,11 +98,10 @@ def solve_sudoku(arr):
     return False  
 
 
-if __name__=="__main__": 
-    testcase = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
+def main(testcase):
+    # testcase = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
     board = clean(testcase)
-    print_board(board)
     solve_sudoku(board)
-    print("Solving...")
-    print("========================")
-    print_board(board) 
+    # print("Solving...")
+    # print("========================")
+    # print_board(board) 

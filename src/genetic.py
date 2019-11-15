@@ -8,6 +8,7 @@ POPULATION_SIZE = 2000
   
 # Valid genes 
 GENES = '''123456789'''
+TARGET = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
   
 def notInRow(arr, row):  
     st = set()  
@@ -68,7 +69,7 @@ class Individual(object):
         self.fitness = self.cal_fitness() 
   
     @classmethod
-    def mutated_genes(self): 
+    def mutated_genes(cls, self): 
         ''' 
         create random genes for mutation 
         '''
@@ -77,21 +78,20 @@ class Individual(object):
         return gene 
   
     @classmethod
-    def create_gnome(self): 
+    def create_gnome(cls, self): 
         ''' 
         create chromosome or string of genes
         
         '''
         global TARGET
-        localTarget = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
         # TODO: Anchor the given places in target
         gnome_len = 81
         genome = []
-        for i in range(len(localTarget)):
-            if(localTarget[i]=='.'):
+        for i in range(len(TARGET)):
+            if(TARGET[i]=='.'):
                 genome.append(self.mutated_genes())
             else:
-                genome.append(localTarget[i])
+                genome.append(TARGET[i])
         # return [self.mutated_genes() for _ in range(gnome_len)] 
         return genome
   
