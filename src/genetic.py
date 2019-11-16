@@ -9,6 +9,10 @@ POPULATION_SIZE = 1000
 # Valid genes 
 GENES = '''123456789'''
 TARGET = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+MASK = []
+for i in range(len(TARGET)):
+    if(TARGET[i]!="."):
+        MASK.append(i)
 
 def parser(arr):
     string_rep = "".join([str(e) for e in arr])
@@ -17,13 +21,19 @@ def parser(arr):
     for i in range(9):
         row = []
         for j in range(9):
-            row.append(temp[(9*i)+j])
+            row.append(int(temp[(9*i)+j]))
         board.append(row)
     return board
 
 def swap(arr, a, b):
     arr[a], arr[b] = arr[b], arr[a]
     return arr
+
+def sanity(num):
+    if(num in MASK):
+        return 0
+    else:
+        return 1
 
 def notInRow(arr, row):  
     st = set()  
@@ -79,17 +89,10 @@ class Individual(object):
     ''' 
     Class representing individual in population 
     '''
-    def __init__(self, chromosome, mask): 
+    def __init__(self, chromosome): 
         self.chromosome = chromosome 
-        self.mask = mask 
+        # self.mask = mask 
         self.fitness = self.cal_fitness()
-
-    def sanity(self, num):
-        if(num in self.mask):
-            return 0
-        else:
-            return 1
-
   
     @classmethod
     def mutated_genes(self): 
@@ -100,7 +103,6 @@ class Individual(object):
         gene = random.choice(GENES) 
         return gene 
     
-    @classmethod
     def swap_genes(self): 
         ''' 
         swap genes for mutation 
@@ -108,8 +110,8 @@ class Individual(object):
         global GENES
         prob = random.random()
 
-        a = random.randint(0, 9)
-        b = random.randint(0, 9)
+        a = random.randint(0, 8)
+        b = random.randint(0, 8)
 
         if(prob <= 0.1):
             if(sanity(a) and sanity(b)):
@@ -176,44 +178,49 @@ class Individual(object):
 
         return genome
     
-    @classmethod
-    def create_mask(self):
-        global TARGET
-        mask = []
-        for i in range(len(TARGET)):
-            if(TARGET[i]!="."):
-                mask.append(i)
-        return mask
+    # @classmethod
+    # def create_mask(self):
+    #     global TARGET
+    #     mask = []
+    #     for i in range(len(TARGET)):
+    #         if(TARGET[i]!="."):
+    #             mask.append(i)
+    #     return mask
   
     def mate(self, par2): 
         ''' 
         Perform mating and produce new offspring 
         '''
   
-        # chromosome for offspring 
-        child_chromosome = [] 
-        for gp1, gp2 in zip(self.chromosome, par2.chromosome):     
-            # random probability   
-            prob = random.random() 
+        # # chromosome for offspring 
+        # child_chromosome = [] 
+        # for gp1, gp2 in zip(self.chromosome, par2.chromosome):     
+        #     # random probability   
+        #     prob = random.random() 
   
-            # if prob is less than 0.45, insert gene 
-            # from parent 1  
-            if prob < 0.45: 
-                child_chromosome.append(gp1) 
+        #     # if prob is less than 0.45, insert gene 
+        #     # from parent 1  
+        #     if prob < 0.45: 
+        #         child_chromosome.append(gp1) 
   
-            # if prob is between 0.45 and 0.90, insert 
-            # gene from parent 2 
-            elif prob < 0.90: 
-                child_chromosome.append(gp2) 
+        #     # if prob is between 0.45 and 0.90, insert 
+        #     # gene from parent 2 
+        #     elif prob < 0.90: 
+        #         child_chromosome.append(gp2) 
   
-            # otherwise insert random gene(mutate),  
-            # for maintaining diversity 
-            else: 
-                child_chromosome.append(self.mutated_genes()) 
-  
-        # create new Individual(offspring) using  
-        # generated chromosome for offspring 
-        return Individual(child_chromosome, self.mask) 
+        #     # otherwise insert random gene(mutate),  
+        #     # for maintaining diversity 
+        #     else: 
+        #         child_chromosome.append(int(self.mutated_genes())) 
+
+        for i in range(1):
+            self.swap_genes()
+            par2.swap_genes()
+        
+        if(self.cal_fitness() > par2.cal_fitness()): 
+            return Individual(self.chromosome)
+        else:
+            return Individual(par2.chromosome)
   
     def cal_fitness(self):
         # global TARGET 
@@ -235,9 +242,9 @@ def main():
   
     # create initial population 
     for _ in range(POPULATION_SIZE): 
-                mask = Individual.create_mask()
+                # mask = Individual.create_mask()
                 gnome = Individual.create_gnome()
-                population.append(Individual(gnome, mask)) 
+                population.append(Individual(gnome)) 
   
     while not found: 
   
