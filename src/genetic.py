@@ -1,392 +1,289 @@
-#!/usr/bin/env python3
-"""
-sudoku_genetic_python - Solve Sudoku with Python and genetic algorithm
-Version : 1.0.0
-Author : Hamidreza Mahdavipanah
-Repository: http://github.com/mahdavipanah/sudoku_genetic_python
-License : MIT License
-"""
-from math import sqrt
-from random import shuffle, randint
-import argparse
-
-# TODO: Logs
-
-
-def same_column_indexes(problem_grid, i, j, N, itself=True):
-    """
-    A generator function that yields indexes of the elements that are in the same column as the input indexes.
-
-    Parameters:
-        - problem_grid (list)
-        - i (int): Sub-grid's index.
-        - j (int): Sub-grid's element index.
-        - N (int)
-        - itself (bool) (optional=True): Indicates whether to yield the input indexes or not.
-    """
-
-    sub_grid_column = i % N
-    cell_column = j % N
-
-    for a in range(sub_grid_column, len(problem_grid), N):
-        for b in range(cell_column, len(problem_grid), N):
-            if (a, b) == (i, j) and not itself:
-                continue
-
-            yield (a, b)
-
-
-def same_row_indexes(problem_grid, i, j, N, itself=True):
-    """
-    A generator function that yields indexes of the elements that are in the same row as the input indexes.
-
-    Parameters:
-        - problem_grid (list)
-        - i (int): Sub-grid's index.
-        - j (int): Sub-grid's element index.
-        - N (int)
-        - itself (bool) (optional=True): Indicates whether to yield the input indexes or not.
-    """
-
-    sub_grid_row = int(i / N)
-    cell_row = int(j / N)
-
-    for a in range(sub_grid_row * N, sub_grid_row * N + N):
-        for b in range(cell_row * N, cell_row * N + N):
-            if (a, b) == (i, j) and not itself:
-                continue
-
-            yield (a, b)
-
-
-def get_cells_from_indexes(grid, indexes):
-    """
-    A generator function that yields the values of a list of grid indexes.
-
-    Parameters:
-        - grid (list)
-        - indexes (list) : e.g. [[1, 2], [3, 10]]
-
-    Returns (list): e.g. [3, 4, 5]
-    """
-
-    for a, b in indexes:
-        yield grid[a][b]
-
-
-def solve(problem_grid, population_size=1000, selection_rate=0.5, max_generations_count=1000, mutation_rate=0.05):
-    """
-    Solves a Sudoku puzzle using genetic algorithm.
-    Assumes that the parameters are all valid.
-
-    Parameters:
-        - problem_grid (list): An N*N sudoku grid. See the paper ("encoding" section) to understand it's format.
-        - population_size (int): The initial population size.
-        - selection_rate (int)
-        - max_generations_count (int)
-        - mutation_rate (int)
-
-    Raises:
-            - Exception: The puzzle is not solvable.
-    """
-
-    # square root of the problem grid's size
-    N = int(sqrt(len(problem_grid)))
-
-    def empty_grid(elem_generator=None):
-        """
-        Returns an empty Sudoku grid.
-
-        Parameters:
-            - elem_generator (function) (optional=None): Is is used to generate initial values of the grid's elements.
-              If it's not given, all grid's elements will be "None".
-        """
-
-        return [
-            [
-                (None if elem_generator is None else elem_generator(i, j))
-                for j in range(len(problem_grid))
-            ] for i in range(len(problem_grid))
-        ]
-
-    def deep_copy_grid(grid):
-        """
-        Returns a deep copy of the grid argument.
-
-        Parameters:
-            - grid (list)
-        """
-
-        return empty_grid(lambda i, j: grid[i][j])
-
-    # this is done to avoid changes in the input argument
-    problem_grid = deep_copy_grid(problem_grid)
-
-    def same_sub_grid_indexes(i, j, itself=True):
-        """
-        A generator function that yields indexes of the elements that are in the same sub-grid as the input indexes.
-
-        Parameters:
-            - i (int): Sub-grid's index.
-            - j (int): Sub-grid's element index.
-            - itself (bool) (optional=True): Indicates whether to yield the input indexes or not.
-        """
-
-        for k in range(len(problem_grid)):
-            if k == j and not itself:
-                continue
-
-            yield (i, k)
-
-    def fill_predetermined_cells():
-        """
-        Fills some predetermined cells of the Sudoku grid using a pencil marking method.
-        See the paper for more details.
-
-        Raises:
-            - Exception: The puzzle is not solvable.
-        """
-
-        # TODO: Implement the hidden cell finder.
-
-        track_grid = empty_grid(lambda *args: [val for val in range(1, len(problem_grid) + 1)])
-
-        def pencil_mark(i, j):
-            """
-            Marks the value of grid[i][j] element in it's row, column and sub-grid.
-
-            Parameters:
-                - i (int): Sub-grid's index.
-                - j (int): Sub-grid's element index.
-
-            Returns: The more completed version of the grid.
-            """
-
-            # remove from same sub-grid cells
-            for a, b in same_sub_grid_indexes(i, j, itself=False):
-                try:
-                    track_grid[a][b].remove(problem_grid[i][j])
-                except (ValueError, AttributeError) as e:
-                    pass
-
-            # remove from same row cells
-            for a, b in same_row_indexes(problem_grid, i, j, N, itself=False):
-                try:
-                    track_grid[a][b].remove(problem_grid[i][j])
-                except (ValueError, AttributeError) as e:
-                    pass
-
-            # remove from same column cells
-            for a, b in same_column_indexes(problem_grid, i, j, N, itself=False):
-                try:
-                    track_grid[a][b].remove(problem_grid[i][j])
-                except (ValueError, AttributeError) as e:
-                    pass
-
-        for i in range(len(problem_grid)):
-            for j in range(len(problem_grid)):
-                if problem_grid[i][j] is not None:
-                    pencil_mark(i, j)
-
-        while True:
-            anything_changed = False
-
-            for i in range(len(problem_grid)):
-                for j in range(len(problem_grid)):
-                    if track_grid[i][j] is None:
-                        continue
-
-                    if len(track_grid[i][j]) == 0:
-                        raise Exception('The puzzle is not solvable.')
-                    elif len(track_grid[i][j]) == 1:
-                        problem_grid[i][j] = track_grid[i][j][0]
-                        pencil_mark(i, j)
-
-                        track_grid[i][j] = None
-
-                        anything_changed = True
-
-            if not anything_changed:
-                break
-
-        return problem_grid
-
-    def generate_initial_population():
-        """
-        Generates an initial population of size "population_size".
-
-        Returns (list): An array of candidate grids.
-        """
-
-        candidates = []
-        for k in range(population_size):
-            candidate = empty_grid()
-            for i in range(len(problem_grid)):
-                shuffled_sub_grid = [n for n in range(1, len(problem_grid) + 1)]
-                shuffle(shuffled_sub_grid)
-
-                for j in range(len(problem_grid)):
-                    if problem_grid[i][j] is not None:
-                        candidate[i][j] = problem_grid[i][j]
-
-                        shuffled_sub_grid.remove(problem_grid[i][j])
-
-                for j in range(len(problem_grid)):
-                    if candidate[i][j] is None:
-                        candidate[i][j] = shuffled_sub_grid.pop()
-
-            candidates.append(candidate)
-
-        return candidates
-
-    def fitness(grid):
-        """
-        Calculates the fitness function for a grid.
-
-        Parameters:
-            - grid (list)
-
-        Returns (int): The value of the fitness function for the input grid.
-        """
-
-        row_duplicates_count = 0
-
-        # calculate rows duplicates
-        for a, b in same_column_indexes(problem_grid, 0, 0, N):
-            row = list(get_cells_from_indexes(grid, same_row_indexes(problem_grid, a, b, N)))
-
-            row_duplicates_count += len(row) - len(set(row))
-
-        return row_duplicates_count
-
-    def selection(candidates):
-        """
-        Returns the best portion ("selection_rate") of candidates based on their fitness function values (lower ones).
-
-        Parameters:
-            - candidates (list)
-
-        Returns (list)
-        """
-
-        # TODO: Probabilistically selection.
-
-        index_fitness = []
-        for i in range(len(candidates)):
-            index_fitness.append(tuple([i, fitness(candidates[i])]))
-
-        index_fitness.sort(key=lambda elem: elem[1])
-
-        selected_part = index_fitness[0: int(len(index_fitness) * selection_rate)]
-        indexes = [e[0] for e in selected_part]
-
-        return [candidates[i] for i in indexes], selected_part[0][1]
-
-    fill_predetermined_cells()
-
-    population = generate_initial_population()
-    best_fitness = None
-
-    for i in range(max_generations_count):
-        population, best_fitness = selection(population)
-
-        if i == max_generations_count - 1 or fitness(population[0]) == 0:
+# Python3 program to create target string, starting from 
+# random string using Genetic Algorithm 
+  
+import random 
+  
+# Number of individuals in each generation 
+POPULATION_SIZE = 1000
+  
+# Valid genes 
+GENES = '''123456789'''
+TARGET = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+
+def parser(arr):
+    string_rep = "".join([str(e) for e in arr])
+    temp = string_rep.replace('.','0')
+    board = []
+    for i in range(9):
+        row = []
+        for j in range(9):
+            row.append(temp[(9*i)+j])
+        board.append(row)
+    return board
+
+def swap(arr, a, b):
+    arr[a], arr[b] = arr[b], arr[a]
+    return arr
+
+def notInRow(arr, row):  
+    st = set()  
+    count = 0
+    for i in range(0, 9):
+        if arr[row][i] in st:  
+            count += 1
+  
+        if arr[row][i] != '.':  
+            st.add(arr[row][i])  
+      
+    return count
+  
+def notInCol(arr, col):  
+    st = set()  
+    count = 0
+    for i in range(0, 9):
+        if arr[i][col] in st: 
+            count += 1            
+  
+        if arr[i][col] != '.':
+            st.add(arr[i][col])  
+      
+    return count
+  
+def notInBox(arr, startRow, startCol):  
+    st = set()  
+    count = 0
+    for row in range(0, 3):  
+        for col in range(0, 3):  
+            curr = arr[row + startRow][col + startCol]  
+  
+            if curr in st:  
+                count += 2
+  
+            if curr != '.':  
+                st.add(curr)  
+          
+    return True
+  
+def isValid(arr, row, col):  
+    return(notInRow(arr, row) + notInCol(arr, col) + notInBox(arr, row - row % 3, col - col % 3))  
+  
+def isValidConfig(arr, n):
+    count = 0  
+    for i in range(0, n):  
+        for j in range(0, n):
+            count += isValid(arr, i, j) 
+
+    return count
+  
+class Individual(object): 
+    ''' 
+    Class representing individual in population 
+    '''
+    def __init__(self, chromosome, mask): 
+        self.chromosome = chromosome 
+        self.mask = mask 
+        self.fitness = self.cal_fitness()
+
+    def sanity(self, num):
+        if(num in self.mask):
+            return 0
+        else:
+            return 1
+
+  
+    @classmethod
+    def mutated_genes(self): 
+        ''' 
+        create random genes for mutation 
+        '''
+        global GENES 
+        gene = random.choice(GENES) 
+        return gene 
+    
+    @classmethod
+    def swap_genes(self): 
+        ''' 
+        swap genes for mutation 
+        '''
+        global GENES
+        prob = random.random()
+
+        a = random.randint(0, 9)
+        b = random.randint(0, 9)
+
+        if(prob <= 0.1):
+            if(sanity(a) and sanity(b)):
+                self.chromosome = swap(self.chromosome, a, b)
+        if(prob > 0.1 and prob <= 0.2):
+             if(sanity(a+9) and sanity(b+9)):
+                self.chromosome = swap(self.chromosome, a+9, b+9)
+        if(prob > 0.2 and prob <= 0.3):
+            if(sanity(a+18) and sanity(b+18)):
+                self.chromosome = swap(self.chromosome, a+18, b+18) 
+        if(prob > 0.3 and prob <= 0.4):
+            if(sanity(a+27) and sanity(b+27)):
+                self.chromosome = swap(self.chromosome, a+27, b+27) 
+        if(prob > 0.4 and prob <= 0.5):
+            if(sanity(a+36) and sanity(b+36)):
+                self.chromosome = swap(self.chromosome, a+36, b+36) 
+        if(prob > 0.5 and prob <= 0.6):
+            if(sanity(a+45) and sanity(b+45)):
+                self.chromosome = swap(self.chromosome, a+45, b+45) 
+        if(prob > 0.6 and prob <= 0.7):
+            if(sanity(a+54) and sanity(b+54)):
+                self.chromosome = swap(self.chromosome, a+54, b+54) 
+        if(prob > 0.7 and prob <= 0.8):
+            if(sanity(a+63) and sanity(b+63)):
+                self.chromosome = swap(self.chromosome, a+63, b+63) 
+        if(prob > 0.8 and prob <= 0.9):
+            if(sanity(a+72) and sanity(b+72)):
+                self.chromosome = swap(self.chromosome, a+72, b+72) 
+
+        return self.chromosome
+  
+    # @classmethod
+    # def create_gnome(self): 
+    #     ''' 
+    #     create chromosome or string of genes
+    #     '''
+    #     global TARGET
+    #     gnome_len = 81
+    #     genome = []
+    #     for i in range(len(TARGET)):
+    #         if(TARGET[i]=='.'):
+    #             genome.append(self.mutated_genes())
+    #         else:
+    #             genome.append(TARGET[i])
+    #     # return [self.mutated_genes() for _ in range(gnome_len)] 
+    #     return genome
+    
+    @classmethod
+    def create_gnome(self):
+        # Must return an array of 81
+        genome = []
+        genes = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        for i in range(9):
+            random.shuffle(genes)
+            for j in genes:
+                genome.append(j)
+        
+        # Now we mask it
+        targetList = list(TARGET)
+        for j in range(81):
+            if(targetList[j] != "."):
+                genome[j] = int(targetList[j])
+
+        return genome
+    
+    @classmethod
+    def create_mask(self):
+        global TARGET
+        mask = []
+        for i in range(len(TARGET)):
+            if(TARGET[i]!="."):
+                mask.append(i)
+        return mask
+  
+    def mate(self, par2): 
+        ''' 
+        Perform mating and produce new offspring 
+        '''
+  
+        # chromosome for offspring 
+        child_chromosome = [] 
+        for gp1, gp2 in zip(self.chromosome, par2.chromosome):     
+            # random probability   
+            prob = random.random() 
+  
+            # if prob is less than 0.45, insert gene 
+            # from parent 1  
+            if prob < 0.45: 
+                child_chromosome.append(gp1) 
+  
+            # if prob is between 0.45 and 0.90, insert 
+            # gene from parent 2 
+            elif prob < 0.90: 
+                child_chromosome.append(gp2) 
+  
+            # otherwise insert random gene(mutate),  
+            # for maintaining diversity 
+            else: 
+                child_chromosome.append(self.mutated_genes()) 
+  
+        # create new Individual(offspring) using  
+        # generated chromosome for offspring 
+        return Individual(child_chromosome, self.mask) 
+  
+    def cal_fitness(self):
+        # global TARGET 
+        # fitness = 0
+        # for gs, gt in zip(self.chromosome, TARGET): 
+        #     if gs != gt: fitness+= 1
+        # return fitness
+        return isValidConfig(parser(self.chromosome), 9)
+  
+# Driver code 
+def main(): 
+    global POPULATION_SIZE 
+  
+    #current generation 
+    generation = 1
+  
+    found = False
+    population = [] 
+  
+    # create initial population 
+    for _ in range(POPULATION_SIZE): 
+                mask = Individual.create_mask()
+                gnome = Individual.create_gnome()
+                population.append(Individual(gnome, mask)) 
+  
+    while not found: 
+  
+        # sort the population in increasing order of fitness score 
+        population = sorted(population, key = lambda x:x.fitness) 
+  
+        # if the individual having lowest fitness score ie.  
+        # 0 then we know that we have reached to the target 
+        # and break the loop 
+        if population[0].fitness == 81: 
+            found = True
             break
-
-        shuffle(population)
-        new_population = []
-
-        while True:
-            solution_1, solution_2 = None, None
-
-            try:
-                solution_1 = population.pop()
-            except IndexError:
-                break
-
-            try:
-                solution_2 = population.pop()
-            except IndexError:
-                new_population.append(solution_2)
-                break
-
-            cross_point = randint(0, len(problem_grid) - 2)
-
-            temp_sub_grid = solution_1[cross_point]
-            solution_1[cross_point] = solution_2[cross_point + 1]
-            solution_2[cross_point + 1] = temp_sub_grid
-
-            new_population.append(solution_1)
-            new_population.append(solution_2)
-
-        # mutation
-        for candidate in new_population[0:int(len(new_population) * mutation_rate)]:
-            random_sub_grid = randint(0, 8)
-            possible_swaps = []
-            for grid_element_index in range(len(problem_grid)):
-                if problem_grid[random_sub_grid][grid_element_index] is None:
-                    possible_swaps.append(grid_element_index)
-            if len(possible_swaps) > 1:
-                shuffle(possible_swaps)
-                first_index = possible_swaps.pop()
-                second_index = possible_swaps.pop()
-                tmp = candidate[random_sub_grid][first_index]
-                candidate[random_sub_grid][first_index] = candidate[random_sub_grid][second_index]
-                candidate[random_sub_grid][second_index] = tmp
-
-        population.extend(new_population)
-
-    return population[0], best_fitness
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("file", help="Input file that contains Sudoku's problem.")
-    parser.add_argument("-o", "--output-file", help="Output file to store problem's solution.",
-                        type=str, default=None)
-    parser.add_argument("-p", "--population-size", type=int, default=10000)
-    parser.add_argument("-s", "--selection-rate", type=float, default=0.5)
-    parser.add_argument("-m", "--max-generations-count", type=int, default=1000)
-    parser.add_argument("-u", "--mutation-rate", type=float, default=0.05)
-    parser.add_argument("-q", "--quiet", action="store_true")
-    args = parser.parse_args()
-
-    try:
-        with open(args.file, "r") as input_file:
-            file_content = input_file.read()
-            file_lines = file_content.split('\n')
-            problem_grid = [[] for i in range(len(file_lines))]
-            sqrt_n = int(sqrt(len(file_lines)))
-            for j in range(len(file_lines)):
-                line_values = [(int(value) if value != '-' else None) for value in file_lines[j].split(' ')]
-                for i in range(len(line_values)):
-                    problem_grid[
-                        int(i / sqrt_n) +
-                        int(j / sqrt_n) * sqrt_n
-                        ].append(line_values[i])
-            try:
-                solution, best_fitness = solve(
-                    problem_grid,
-                    population_size=args.population_size,
-                    selection_rate=args.selection_rate,
-                    max_generations_count=args.max_generations_count,
-                    mutation_rate=args.mutation_rate
-                )
-                output_str = "Best fitness value: " + str(best_fitness) + '\n\n'
-                for a, b in same_column_indexes(solution, 0, 0, sqrt_n):
-                    row = list(get_cells_from_indexes(solution, same_row_indexes(solution, a, b, sqrt_n)))
-
-                    output_str += " ".join([str(elem) for elem in row]) + '\n'
-                output_str = output_str
-
-                if args.output_file:
-                    with open(args.output_file, "w") as output_file:
-                        output_file.write(output_str)
-
-                if not args.quiet:
-                    print(output_str[:-1])
-
-            except:
-                exit('Input problem is not solvable.')
-    except FileNotFoundError:
-        exit("Input file not found.")
+  
+        # Otherwise generate new offsprings for new generation 
+        new_generation = [] 
+  
+        # Perform Elitism, that mean 10% of fittest population 
+        # goes to the next generation 
+        s = int((10*POPULATION_SIZE)/100) 
+        new_generation.extend(population[:s]) 
+  
+        # From 50% of fittest population, Individuals  
+        # will mate to produce offspring 
+        s = int((90*POPULATION_SIZE)/100) 
+        for _ in range(s): 
+            parent1 = random.choice(population[:50]) 
+            parent2 = random.choice(population[:50]) 
+            child = parent1.mate(parent2) 
+            new_generation.append(child) 
+  
+        population = new_generation 
+  
+        print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}". 
+              format(generation, 
+              "".join([str(e) for e in population[0].chromosome]), 
+              population[0].fitness,
+              population[POPULATION_SIZE-1].fitness))
+  
+        generation += 1
+  
+      
+    print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}".
+          format(generation, 
+          "".join([str(e) for e in population[0].chromosome]), 
+          population[0].fitness,
+          population[POPULATION_SIZE-1].fitness)) 
+  
+if __name__ == '__main__': 
+    main() 
