@@ -1,3 +1,4 @@
+# import time
 def clean(testcase):
     temp = testcase.replace('.','0')
     board = []
@@ -100,8 +101,16 @@ def solve_sudoku(arr):
 
 def main(testcase):
     # testcase = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
+    # bt_time = 0.0
+    # start = time.time()
     board = clean(testcase)
     solve_sudoku(board)
+    # end = time.time()
+    # bt_time += (end-start)
+    # print("Total time [bt] for single hard test case:", bt_time)
     # print("Solving...")
     # print("========================")
     # print_board(board) 
+
+# t ='..5..8..18......9.......78....4.....64....9......53..2.6.........138..5....9.714.'
+# main(t)
