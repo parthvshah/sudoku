@@ -13,9 +13,11 @@ for t in csp:
 csp_list_h = [i.replace('\n','') for i in csp_list_h]
 csp_list_h = [float(i) for i in csp_list_h]
 
+mean1 = statistics.mean(csp_list_h)
+print(mean1)
 #bt hard cases
-bt_list_h= []
-for t in bt:
-    bt_list_h.append(t)
-bt_list_h = [i.replace('\n','') for i in bt_list_h]
-bt_list_h = [float(i) for i in bt_list_h]
+# bt_list_h= []
+# for t in bt:
+#     bt_list_h.append(t)
+# bt_list_h = [i.replace('\n','') for i in bt_list_h]
+# bt_list_h = [float(i) for i in bt_list_h]
