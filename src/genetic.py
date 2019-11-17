@@ -5,10 +5,11 @@ import random
   
 # Number of individuals in each generation 
 POPULATION_SIZE = 1000
+MAX_GENERATION_COUNT = 100
   
 # Valid genes 
 GENES = '''123456789'''
-TARGET = "4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......"
+TARGET = "9.42....7.1..........7.65.....8...9..2.9.4.6..4...2.....16.7..........3.3....57.2"
 MASK = []
 for i in range(len(TARGET)):
     if(TARGET[i]!="."):
@@ -277,20 +278,21 @@ def main():
   
         population = new_generation 
   
-        print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}". 
-              format(generation, 
-              "".join([str(e) for e in population[0].chromosome]), 
-              population[0].fitness,
-              population[POPULATION_SIZE-1].fitness))
-  
+        # print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}". 
+        #       format(generation, 
+        #       "".join([str(e) for e in population[0].chromosome]), 
+        #       population[0].fitness,
+        #       population[POPULATION_SIZE-1].fitness))
+
+        if(generation==MAX_GENERATION_COUNT):
+            break
         generation += 1
   
       
-    print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}".
+    print("Gen: {}\tSol: {}\tMin Fit: {}".
           format(generation, 
           "".join([str(e) for e in population[0].chromosome]), 
-          population[0].fitness,
-          population[POPULATION_SIZE-1].fitness)) 
+          population[0].fitness)) 
   
 if __name__ == '__main__': 
     main() 
