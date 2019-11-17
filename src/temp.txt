@@ -1,0 +1,5 @@
+Total time [csp]: 0.07210755348205566
+Average time [csp]: 0.0008011950386895074
+
+Total time [bt]: 2222.1927523612976
+Average time [bt]: 24.691030581792194
