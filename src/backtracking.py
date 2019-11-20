@@ -1,4 +1,5 @@
 # import time
+#cleans the input testcase
 def clean(testcase):
     temp = testcase.replace('.','0')
     board = []
@@ -23,7 +24,7 @@ def print_board(bo):
                 print(bo[i][j])
             else:
                 print(str(bo[i][j]) + " ", end="")
-
+#finds an empty square and assigns the row and column to l
 def find_empty_location(arr,l): 
     for row in range(9): 
         for col in range(9): 
@@ -33,69 +34,52 @@ def find_empty_location(arr,l):
                 return True
     return False
   
-# Returns a boolean which indicates whether any assigned entry 
-# in the specified row matches the given number. 
+#checks whether any assigned number in the specified row matches the given number
 def used_in_row(arr,row,num): 
     for i in range(9): 
         if(arr[row][i] == num): 
             return True
     return False
   
-# Returns a boolean which indicates whether any assigned entry 
-# in the specified column matches the given number. 
+#checks whether any assigned number in the specified column matches the given number
 def used_in_col(arr,col,num): 
     for i in range(9): 
         if(arr[i][col] == num): 
             return True
     return False
   
-# Returns a boolean which indicates whether any assigned entry 
-# within the specified 3x3 box matches the given number 
+#checks whether any assigned entry within the specified 3x3 box matches the given number 
 def used_in_box(arr,row,col,num): 
     for i in range(3): 
         for j in range(3): 
             if(arr[i+row][j+col] == num): 
                 return True
     return False
-  
-def check_location_is_safe(arr,row,col,num): 
-      
-    # Check if 'num' is not already placed in current row, 
-    # current column and current 3x3 box 
+
+#check if num is not already placed in current row,current col and current 3x3 box 
+def check_location_is_safe(arr,row,col,num):  
     return not used_in_row(arr,row,num) and not used_in_col(arr,col,num) and not used_in_box(arr,row - row%3,col - col%3,num) 
   
-# Takes a partially filled-in grid and attempts to assign values to 
-# all unassigned locations in such a way to meet the requirements 
-# for Sudoku solution (non-duplication across rows, columns, and boxes) 
-def solve_sudoku(arr): 
-           
+#sudoku solving
+def solve_sudoku(arr):     
     l=[0,0] 
-      
-    # If there is no unassigned location, we are done     
+    # if no empty location, done   
     if(not find_empty_location(arr,l)): 
         return True
-      
-    # Assigning list values to row and col that we got from the above Function  
+    #assigning list values to row and col from above function
     row=l[0] 
     col=l[1] 
-      
-    # consider digits 1 to 9 
+    #checking a digit
     for num in range(1,10): 
-          
-        # if looks promising 
-        if(check_location_is_safe(arr,row,col,num)): 
-              
-            # make tentative assignment 
-            arr[row][col]=num 
-  
-            # return, if success, ya! 
+        if(check_location_is_safe(arr,row,col,num)):  
+            arr[row][col]=num
+            # return true if success
             if(solve_sudoku(arr)): 
                 return True
-  
-            # failure, unmake & try again 
+            # failure, unmake and try again 
             arr[row][col] = 0
               
-    # this triggers backtracking         
+    #backtracking         
     return False  
 
 
