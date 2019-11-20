@@ -1,10 +1,7 @@
-# Python3 program to create target string, starting from 
-# random string using Genetic Algorithm 
-  
 import random 
   
 # Number of individuals in each generation 
-POPULATION_SIZE = 1000
+POPULATION_SIZE = 100
 MAX_GENERATION_COUNT = 100
   
 # Valid genes 
@@ -92,7 +89,6 @@ class Individual(object):
     '''
     def __init__(self, chromosome): 
         self.chromosome = chromosome 
-        # self.mask = mask 
         self.fitness = self.cal_fitness()
   
     @classmethod
@@ -143,22 +139,6 @@ class Individual(object):
                 self.chromosome = swap(self.chromosome, a+72, b+72) 
 
         return self.chromosome
-  
-    # @classmethod
-    # def create_gnome(self): 
-    #     ''' 
-    #     create chromosome or string of genes
-    #     '''
-    #     global TARGET
-    #     gnome_len = 81
-    #     genome = []
-    #     for i in range(len(TARGET)):
-    #         if(TARGET[i]=='.'):
-    #             genome.append(self.mutated_genes())
-    #         else:
-    #             genome.append(TARGET[i])
-    #     # return [self.mutated_genes() for _ in range(gnome_len)] 
-    #     return genome
     
     @classmethod
     def create_gnome(self):
@@ -178,41 +158,12 @@ class Individual(object):
                 genome[j] = int(targetList[j])
 
         return genome
-    
-    # @classmethod
-    # def create_mask(self):
-    #     global TARGET
-    #     mask = []
-    #     for i in range(len(TARGET)):
-    #         if(TARGET[i]!="."):
-    #             mask.append(i)
-    #     return mask
+
   
     def mate(self, par2): 
         ''' 
         Perform mating and produce new offspring 
         '''
-  
-        # # chromosome for offspring 
-        # child_chromosome = [] 
-        # for gp1, gp2 in zip(self.chromosome, par2.chromosome):     
-        #     # random probability   
-        #     prob = random.random() 
-  
-        #     # if prob is less than 0.45, insert gene 
-        #     # from parent 1  
-        #     if prob < 0.45: 
-        #         child_chromosome.append(gp1) 
-  
-        #     # if prob is between 0.45 and 0.90, insert 
-        #     # gene from parent 2 
-        #     elif prob < 0.90: 
-        #         child_chromosome.append(gp2) 
-  
-        #     # otherwise insert random gene(mutate),  
-        #     # for maintaining diversity 
-        #     else: 
-        #         child_chromosome.append(int(self.mutated_genes())) 
 
         for i in range(1):
             self.swap_genes()
@@ -224,11 +175,6 @@ class Individual(object):
             return Individual(par2.chromosome)
   
     def cal_fitness(self):
-        # global TARGET 
-        # fitness = 0
-        # for gs, gt in zip(self.chromosome, TARGET): 
-        #     if gs != gt: fitness+= 1
-        # return fitness
         return isValidConfig(parser(self.chromosome), 9)
   
 # Driver code 
@@ -278,11 +224,11 @@ def main():
   
         population = new_generation 
   
-        # print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}". 
-        #       format(generation, 
-        #       "".join([str(e) for e in population[0].chromosome]), 
-        #       population[0].fitness,
-        #       population[POPULATION_SIZE-1].fitness))
+        print("Gen: {}\tSol: {}\tMin Fit: {}\tMax Fit: {}". 
+              format(generation, 
+              "".join([str(e) for e in population[0].chromosome]), 
+              population[0].fitness,
+              population[POPULATION_SIZE-1].fitness))
 
         if(generation==MAX_GENERATION_COUNT):
             break
