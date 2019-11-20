@@ -1,4 +1,3 @@
-# import time
 def clean(testcase):
     temp = testcase.replace('.','0')
     board = []
@@ -32,25 +31,19 @@ def find_empty_location(arr,l):
                 l[1]=col 
                 return True
     return False
-  
-# Returns a boolean which indicates whether any assigned entry 
-# in the specified row matches the given number. 
+ 
 def used_in_row(arr,row,num): 
     for i in range(9): 
         if(arr[row][i] == num): 
             return True
     return False
   
-# Returns a boolean which indicates whether any assigned entry 
-# in the specified column matches the given number. 
 def used_in_col(arr,col,num): 
     for i in range(9): 
         if(arr[i][col] == num): 
             return True
     return False
   
-# Returns a boolean which indicates whether any assigned entry 
-# within the specified 3x3 box matches the given number 
 def used_in_box(arr,row,col,num): 
     for i in range(3): 
         for j in range(3): 
@@ -59,58 +52,26 @@ def used_in_box(arr,row,col,num):
     return False
   
 def check_location_is_safe(arr,row,col,num): 
-      
-    # Check if 'num' is not already placed in current row, 
-    # current column and current 3x3 box 
     return not used_in_row(arr,row,num) and not used_in_col(arr,col,num) and not used_in_box(arr,row - row%3,col - col%3,num) 
   
-# Takes a partially filled-in grid and attempts to assign values to 
-# all unassigned locations in such a way to meet the requirements 
-# for Sudoku solution (non-duplication across rows, columns, and boxes) 
-def solve_sudoku(arr): 
-           
-    l=[0,0] 
-      
-    # If there is no unassigned location, we are done     
+def solve_sudoku(arr):     
+    l=[0,0]     
     if(not find_empty_location(arr,l)): 
         return True
-      
-    # Assigning list values to row and col that we got from the above Function  
     row=l[0] 
     col=l[1] 
-      
-    # consider digits 1 to 9 
     for num in range(1,10): 
-          
-        # if looks promising 
         if(check_location_is_safe(arr,row,col,num)): 
-              
-            # make tentative assignment 
             arr[row][col]=num 
-  
-            # return, if success, ya! 
             if(solve_sudoku(arr)): 
                 return True
-  
-            # failure, unmake & try again 
-            arr[row][col] = 0
-              
-    # this triggers backtracking         
+            arr[row][col] = 0       
     return False  
 
-
 def main(testcase):
-    # testcase = '..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3..'
-    # bt_time = 0.0
-    # start = time.time()
     board = clean(testcase)
     solve_sudoku(board)
-    # end = time.time()
-    # bt_time += (end-start)
-    # print("Total time [bt] for single hard test case:", bt_time)
-    # print("Solving...")
-    # print("========================")
-    # print_board(board) 
+    #print_board(board) 
 
 # t ='..5..8..18......9.......78....4.....64....9......53..2.6.........138..5....9.714.'
 # main(t)
